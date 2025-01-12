@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"sort"
 )
 
 type Match struct {
@@ -18,6 +19,11 @@ type Order struct {
 	Timestamp int64
 }
 
+func (o *Order) String() string {
+	return fmt.Sprintf("size: %.2f", o.Size)
+
+}
+
 func NewOrder(bid bool, size float64) *Order {
 	return &Order{
 		Size:      size,
@@ -27,16 +33,28 @@ func NewOrder(bid bool, size float64) *Order {
 	}
 }
 
-func (o *Order) String() string {
-	return fmt.Sprintf("size: %.2f", o.Size)
+type Orders []*Order
 
+func (o Orders) Len() int {
+	return len(o)
 }
 
-type Limit struct {
-	Price       float64
-	Orders      []*Order
-	TotalVolume float64
+func (o Orders) Swap(i, j int) {
+	o[i], o[j] = o[j], o[i]
 }
+
+func (o Orders) Less(i, j int) bool {
+	return o[i].Timestamp < o[j].Timestamp
+}
+
+type (
+	Limit struct {
+		Price       float64
+		Orders      Orders
+		TotalVolume float64
+	}
+	limits []*Limit
+)
 
 func NewLimit(price float64) *Limit {
 	return &Limit{
@@ -73,7 +91,42 @@ func (l *Limit) DeleteOrder(order *Order) {
 	order.Limit = nil
 	l.TotalVolume -= order.Size
 
-	// TODO: resort the whole resting orders
+	// resort the whole resting orders
+	sort.Sort(l.Orders)
+}
+
+// ByBestAsk 按最佳买价排序
+type ByBestAsk struct {
+	limits
+}
+
+func (a ByBestAsk) Len() int {
+	return len(a.limits)
+}
+
+func (a ByBestAsk) Swap(i, j int) {
+	a.limits[i], a.limits[j] = a.limits[j], a.limits[i]
+}
+
+func (a ByBestAsk) Less(i, j int) bool {
+	return a.limits[i].Price < a.limits[j].Price
+}
+
+// ByBestBid 按最佳卖价排序
+type ByBestBid struct {
+	limits
+}
+
+func (b ByBestBid) Len() int {
+	return len(b.limits)
+}
+
+func (b ByBestBid) Swap(i, j int) {
+	b.limits[i], b.limits[j] = b.limits[j], b.limits[i]
+}
+
+func (b ByBestBid) Less(i, j int) bool {
+	return b.limits[i].Price > b.limits[j].Price
 }
 
 type Orderbook struct {
@@ -84,18 +137,11 @@ type Orderbook struct {
 	BidLimits map[float64]*Limit
 }
 
-func NewOrderbook() *Orderbook {
-	return &Orderbook{
-		Asks:      []*Limit{},
-		Bids:      []*Limit{},
-		AskLimits: make(map[float64]*Limit),
-		BidLimits: make(map[float64]*Limit),
-	}
-}
-
 func (ob *Orderbook) PlaceOrder(price float64, o *Order) []*Order {
 	// 1. try to match the orders
 	// matching logic
+	// sort the limit by price asc
+	// sort the order by timestamp desc, peace
 
 	// 2. add the rest of the order to the orderbook
 	if o.Size > 0.0 {
@@ -104,9 +150,6 @@ func (ob *Orderbook) PlaceOrder(price float64, o *Order) []*Order {
 
 	return nil
 }
-
-// of course i'm opinionated although i write
-// a lot of rust myself
 
 func (ob *Orderbook) add(price float64, o *Order) {
 	var limit *Limit
@@ -130,4 +173,13 @@ func (ob *Orderbook) add(price float64, o *Order) {
 	}
 
 	// TODO: do something
+}
+
+func NewOrderbook() *Orderbook {
+	return &Orderbook{
+		Asks:      []*Limit{},
+		Bids:      []*Limit{},
+		AskLimits: make(map[float64]*Limit),
+		BidLimits: make(map[float64]*Limit),
+	}
 }

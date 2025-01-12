@@ -5,6 +5,9 @@ import (
 	"testing"
 )
 
+// of course i'm opinionated although i write
+// a lot of rust myself
+
 func TestLimit(t *testing.T) {
 	l := NewLimit(10_000)
 	buyOrderA := NewOrder(true, 5)
