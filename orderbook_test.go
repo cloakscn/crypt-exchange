@@ -147,3 +147,16 @@ func TestOrderSorting(t *testing.T) {
 	assert(t, asks[0].Price, 11_000.0)
 	assert(t, asks[1].Price, 12_000.0)
 }
+
+func TestMarketOrderErrors(t *testing.T) {
+	ob := NewOrderbook()
+
+	// Test market order with no matching orders
+	buyOrder := NewOrder(true, 10)
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic for market order with no matching orders")
+		}
+	}()
+	ob.PlaceMarketOrder(buyOrder)
+}
