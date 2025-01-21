@@ -93,15 +93,6 @@ func (l *Limit) DeleteOrder(order *Order) {
 	sort.Sort(l.Orders)
 }
 
-/**
-buyer
-10 0  // 10 100
-9  0  // 9 100
-8  50 // 8 100
-
-seller
-250
-*/
 func (l *Limit) Fill(o *Order) []Match {
 	var matches []Match
 
