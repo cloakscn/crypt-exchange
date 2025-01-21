@@ -92,3 +92,17 @@ func TestOrderMethods(t *testing.T) {
 	order.Size = 0
 	assert(t, order.IsFilled(), true)
 }
+
+func TestLimitFill(t *testing.T) {
+	l := NewLimit(10_000)
+	buyOrder := NewOrder(true, 10)
+	sellOrder := NewOrder(false, 5)
+
+	l.AddOrder(buyOrder)
+	matches := l.Fill(sellOrder)
+
+	assert(t, len(matches), 1)
+	assert(t, matches[0].SizeFilled, 5.0)
+	assert(t, buyOrder.Size, 5.0)
+	assert(t, sellOrder.IsFilled(), true)
+}
