@@ -123,3 +123,27 @@ func TestOrderbookTotals(t *testing.T) {
 	assert(t, ob.BitTotalVolume(), 10.0)
 	assert(t, ob.AskTotalVolume(), 5.0)
 }
+
+func TestOrderSorting(t *testing.T) {
+	ob := NewOrderbook()
+
+	buyOrderA := NewOrder(true, 10)
+	buyOrderB := NewOrder(true, 20)
+	sellOrderA := NewOrder(false, 5)
+	sellOrderB := NewOrder(false, 15)
+
+	ob.PlaceLimitOrder(10_000, buyOrderA)
+	ob.PlaceLimitOrder(9_000, buyOrderB)
+	ob.PlaceLimitOrder(11_000, sellOrderA)
+	ob.PlaceLimitOrder(12_000, sellOrderB)
+
+	// Test bid sorting (highest first)
+	bids := ob.Bids()
+	assert(t, bids[0].Price, 10_000.0)
+	assert(t, bids[1].Price, 9_000.0)
+
+	// Test ask sorting (lowest first)
+	asks := ob.Asks()
+	assert(t, asks[0].Price, 11_000.0)
+	assert(t, asks[1].Price, 12_000.0)
+}
