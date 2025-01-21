@@ -35,7 +35,7 @@ go run main.go
 
 如果你有任何问题或建议，请通过以下方式联系我们：
 
-- 主页：[https://cloakscn.github.io](https://cloakscn.github.io)
+- 主页：[https://cloaks.cn](https://cloaks.cn)
 - 邮箱： wy03290019@163.com
 - GitHub: [Cloaks](https://github.com/cloakscn)
 
