@@ -106,3 +106,20 @@ func TestLimitFill(t *testing.T) {
 	assert(t, buyOrder.Size, 5.0)
 	assert(t, sellOrder.IsFilled(), true)
 }
+
+func TestOrderbookTotals(t *testing.T) {
+	ob := NewOrderbook()
+
+	// Test empty orderbook
+	assert(t, ob.BitTotalVolume(), 0.0)
+	assert(t, ob.AskTotalVolume(), 0.0)
+
+	// Add orders
+	buyOrder := NewOrder(true, 10)
+	sellOrder := NewOrder(false, 5)
+	ob.PlaceLimitOrder(10_000, buyOrder)
+	ob.PlaceLimitOrder(11_000, sellOrder)
+
+	assert(t, ob.BitTotalVolume(), 10.0)
+	assert(t, ob.AskTotalVolume(), 5.0)
+}
