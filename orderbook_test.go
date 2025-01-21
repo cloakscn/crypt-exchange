@@ -76,25 +76,19 @@ func TestPlaceMarketOrderMultiFill(t *testing.T) {
 
 	assert(t, ob.BitTotalVolume(), 60.0)
 
-
 	sellOrderA := NewOrder(false, 20)
 	matches := ob.PlaceMarketOrder(sellOrderA)
 	assert(t, len(matches), 3)
+	assert(t, matches[0].Price, 10_000.0)
+	assert(t, matches[1].Price, 9_000.0)
+	assert(t, matches[2].Price, 5_000.0)
+}
 
-	// sellOrderB := NewOrder(false, 20)
-	// sellOrderC := NewOrder(false, 20)
-	// ob.PlaceLimitOrder(10_000, sellOrderC)
+func TestOrderMethods(t *testing.T) {
+	order := NewOrder(true, 10)
+	assert(t, order.IsFilled(), false)
+	assert(t, order.String(), "size: 10.00")
 
-	// sellOrderD := NewOrder(false, 20)
-	// ob.PlaceLimitOrder(10_000, sellOrderD)
-
-	// assert(t, len(ob.asks), 1)
-	// assert(t, ob.AskTotalVolume(), 10.0)
-	// assert(t, matches[0].Ask, sellOrder)
-	// assert(t, matches[0].Bid, buyOrder)
-	// assert(t, matches[0].SizeFilled, 10.0)
-	// assert(t, matches[0].Price, 10_000.0)
-	// assert(t, buyOrder.IsFilled(), true)
-
-	// fmt.Printf("%+v", matches)
+	order.Size = 0
+	assert(t, order.IsFilled(), true)
 }
