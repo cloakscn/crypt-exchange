@@ -13,10 +13,10 @@ type Match struct {
 }
 
 type Order struct {
-	Size      float64
-	Bid       bool
-	Limit     *Limit
-	Timestamp int64
+	Size      float64 // 数量
+	Bid       bool    // 是否是买单
+	Limit     *Limit  // 所属限价单
+	Timestamp int64   // 时间戳
 }
 
 func (o *Order) String() string {
@@ -94,7 +94,10 @@ func (l *Limit) DeleteOrder(order *Order) {
 }
 
 func (l *Limit) Fill(o *Order) []Match {
-	var matches []Match
+	var (
+		matches        []Match
+		ordersToDelete []*Order
+	)
 
 	for _, order := range l.Orders {
 		match := l.fillOrder(order, o)
@@ -102,10 +105,19 @@ func (l *Limit) Fill(o *Order) []Match {
 
 		l.TotalVolume -= match.SizeFilled
 
+		if order.IsFilled() {
+			ordersToDelete = append(ordersToDelete, order)
+		}
+
 		if o.IsFilled() {
 			break
 		}
 	}
+
+	for _, order := range ordersToDelete {
+		l.DeleteOrder(order)
+	}
+
 	return matches
 }
 

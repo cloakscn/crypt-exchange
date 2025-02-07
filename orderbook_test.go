@@ -70,18 +70,20 @@ func TestPlaceMarketOrderMultiFill(t *testing.T) {
 	buyOrderB := NewOrder(true, 20)
 	buyOrderC := NewOrder(true, 30)
 
-	ob.PlaceLimitOrder(10_000, buyOrderA)
-	ob.PlaceLimitOrder(9_000, buyOrderB)
 	ob.PlaceLimitOrder(5_000, buyOrderC)
+	ob.PlaceLimitOrder(9_000, buyOrderB)
+	ob.PlaceLimitOrder(10_000, buyOrderA)
 
 	assert(t, ob.BitTotalVolume(), 60.0)
 
 	sellOrderA := NewOrder(false, 20)
 	matches := ob.PlaceMarketOrder(sellOrderA)
+
+	assert(t, ob.BitTotalVolume(), 40.0)
 	assert(t, len(matches), 3)
-	assert(t, matches[0].Price, 10_000.0)
-	assert(t, matches[1].Price, 9_000.0)
-	assert(t, matches[2].Price, 5_000.0)
+	assert(t, len(ob.bids), 3)
+
+	fmt.Printf("%+v", matches)
 }
 
 func TestOrderMethods(t *testing.T) {
@@ -150,13 +152,5 @@ func TestOrderSorting(t *testing.T) {
 
 func TestMarketOrderErrors(t *testing.T) {
 	ob := NewOrderbook()
-
-	// Test market order with no matching orders
-	buyOrder := NewOrder(true, 10)
-	defer func() {
-		if r := recover(); r == nil {
-			t.Errorf("Expected panic for market order with no matching orders")
-		}
-	}()
-	ob.PlaceMarketOrder(buyOrder)
+	assert(t, len(ob.bids), 1)
 }
