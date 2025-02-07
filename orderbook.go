@@ -215,6 +215,10 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 		for _, limit := range ob.Asks() {
 			limitMatches := limit.Fill(o)
 			matches = append(matches, limitMatches...)
+
+			if len(limit.Orders) == 0 {
+				ob.clearLimit(true, limit)
+			}
 		}
 	} else {
 		if o.Size > ob.BitTotalVolume() {
@@ -225,6 +229,10 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 		for _, limit := range ob.Bids() {
 			limitMatches := limit.Fill(o)
 			matches = append(matches, limitMatches...)
+
+			if len(limit.Orders) == 0 {
+				ob.clearLimit(false, limit)
+			}
 		}
 	}
 	return matches
@@ -252,6 +260,26 @@ func (ob *Orderbook) PlaceLimitOrder(price float64, o *Order) {
 	}
 
 	// TODO: do something
+}
+
+func (ob *Orderbook) clearLimit(bid bool, l *Limit) {
+	if bid {
+		delete(ob.BidLimits, l.Price)
+		for i := 0; i < len(ob.bids); i++ {
+			if ob.bids[i] == l {
+				ob.bids[i] = ob.bids[len(ob.bids)-1]
+				ob.bids = ob.bids[:len(ob.bids)-1]
+			}
+		}
+	} else {
+		delete(ob.AskLimits, l.Price)
+		for i := 0; i < len(ob.asks); i++ {
+			if ob.asks[i] == l {
+				ob.asks[i] = ob.asks[len(ob.asks)-1]
+				ob.asks = ob.asks[:len(ob.asks)-1]
+			}
+		}
+	}
 }
 
 func (ob *Orderbook) BitTotalVolume() float64 {
