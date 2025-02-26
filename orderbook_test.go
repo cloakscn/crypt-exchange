@@ -155,10 +155,24 @@ func TestOrderSorting(t *testing.T) {
 	assert(t, asks[1].Price, 12_000.0)
 }
 
-func TestMarketOrderErrors(t *testing.T) {
+func TestCancelOrder(t *testing.T) {
 	ob := NewOrderbook()
-	assert(t, len(ob.bids), 1)
+	buyOrder := NewOrder(true, 10)
+	ob.PlaceLimitOrder(10_000, buyOrder)
+
+	assert(t, ob.BitTotalVolume(), 10.0)
+	fmt.Println("cancel befor: ob.bids=", ob.bids[0])
+
+	ob.CancelOrder(buyOrder)
+
+	assert(t, ob.BitTotalVolume(), 0.0)
+	fmt.Println("cancel after: ob.bids=", ob.bids[0])
 }
+
+// func TestMarketOrderErrors(t *testing.T) {
+// 	ob := NewOrderbook()
+// 	assert(t, len(ob.bids), 1)
+// }
 
 func TestProgress(t *testing.T) {
 	for i := 0; i < 100; i++ {

@@ -203,6 +203,12 @@ type Orderbook struct {
 	BidLimits map[float64]*Limit
 }
 
+func (ob *Orderbook) CancelOrder(o *Order) error {
+	limit := o.Limit
+	limit.DeleteOrder(o)
+	return nil
+}
+
 func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 	var matches []Match
 
