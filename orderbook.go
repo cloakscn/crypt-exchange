@@ -196,11 +196,17 @@ func (b ByBestBid) Less(i, j int) bool {
 }
 
 type Orderbook struct {
-	asks []*Limit
-	bids []*Limit
+	asks []*Limit // 卖单
+	bids []*Limit // 买单
 
 	AskLimits map[float64]*Limit
 	BidLimits map[float64]*Limit
+}
+
+func (ob *Orderbook) CancelOrder(o *Order) error {
+	limit := o.Limit
+	limit.DeleteOrder(o)
+	return nil
 }
 
 func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
@@ -217,7 +223,7 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 			matches = append(matches, limitMatches...)
 
 			if len(limit.Orders) == 0 {
-				ob.clearLimit(true, limit)
+				ob.clearLimit(false, limit)
 			}
 		}
 	} else {
@@ -231,7 +237,7 @@ func (ob *Orderbook) PlaceMarketOrder(o *Order) []Match {
 			matches = append(matches, limitMatches...)
 
 			if len(limit.Orders) == 0 {
-				ob.clearLimit(false, limit)
+				ob.clearLimit(true, limit)
 			}
 		}
 	}
@@ -249,7 +255,6 @@ func (ob *Orderbook) PlaceLimitOrder(price float64, o *Order) {
 
 	if limit == nil {
 		limit = NewLimit(price)
-		limit.AddOrder(o)
 		if o.Bid {
 			ob.bids = append(ob.bids, limit)
 			ob.BidLimits[price] = limit
@@ -259,6 +264,7 @@ func (ob *Orderbook) PlaceLimitOrder(price float64, o *Order) {
 		}
 	}
 
+	limit.AddOrder(o)
 	// TODO: do something
 }
 

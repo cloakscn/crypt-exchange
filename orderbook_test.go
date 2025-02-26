@@ -3,7 +3,9 @@ package main
 import (
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
+	"time"
 )
 
 // of course i'm opinionated although i write
@@ -69,19 +71,22 @@ func TestPlaceMarketOrderMultiFill(t *testing.T) {
 	buyOrderA := NewOrder(true, 10)
 	buyOrderB := NewOrder(true, 20)
 	buyOrderC := NewOrder(true, 30)
+	buyOrderD := NewOrder(true, 1)
 
 	ob.PlaceLimitOrder(5_000, buyOrderC)
+	ob.PlaceLimitOrder(5_000, buyOrderD)
 	ob.PlaceLimitOrder(9_000, buyOrderB)
 	ob.PlaceLimitOrder(10_000, buyOrderA)
 
-	assert(t, ob.BitTotalVolume(), 60.0)
+	assert(t, ob.BitTotalVolume(), 61.0)
 
+	// what the hell is this?
 	sellOrderA := NewOrder(false, 50)
 	matches := ob.PlaceMarketOrder(sellOrderA)
 
-	assert(t, ob.BitTotalVolume(), 40.0)
+	assert(t, ob.BitTotalVolume(), 11.0)
 	assert(t, len(matches), 3)
-	assert(t, len(ob.bids), 3)
+	assert(t, len(ob.bids), 1)
 
 	fmt.Printf("%+v", matches)
 }
@@ -150,7 +155,30 @@ func TestOrderSorting(t *testing.T) {
 	assert(t, asks[1].Price, 12_000.0)
 }
 
-func TestMarketOrderErrors(t *testing.T) {
+func TestCancelOrder(t *testing.T) {
 	ob := NewOrderbook()
-	assert(t, len(ob.bids), 1)
+	buyOrder := NewOrder(true, 10)
+	ob.PlaceLimitOrder(10_000, buyOrder)
+
+	assert(t, ob.BitTotalVolume(), 10.0)
+	fmt.Println("cancel befor: ob.bids=", ob.bids[0])
+
+	ob.CancelOrder(buyOrder)
+
+	assert(t, ob.BitTotalVolume(), 0.0)
+	fmt.Println("cancel after: ob.bids=", ob.bids[0])
+}
+
+// func TestMarketOrderErrors(t *testing.T) {
+// 	ob := NewOrderbook()
+// 	assert(t, len(ob.bids), 1)
+// }
+
+func TestProgress(t *testing.T) {
+	for i := 0; i < 100; i++ {
+		fmt.Printf("\r[%-100s]\t percent %d\t%d|%d",
+			strings.Repeat("#", i), i, i, 100)
+		time.Sleep(100 * time.Millisecond)
+	}
+	fmt.Println()
 }
