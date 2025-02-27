@@ -1,7 +1,7 @@
 build:
 	go build -o bin/exchange
 
-run:
+run: build
 	./bin/exchange
 
 test:
