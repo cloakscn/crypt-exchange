@@ -2,7 +2,9 @@ package orderbook
 
 import (
 	"fmt"
+	"math/rand"
 	"sort"
+	"time"
 )
 
 type Match struct {
@@ -13,6 +15,7 @@ type Match struct {
 }
 
 type Order struct {
+	Id        int64
 	Size      float64 // 数量
 	Bid       bool    // 是否是买单
 	Limit     *Limit  // 所属限价单
@@ -31,10 +34,12 @@ func (o *Order) IsFilled() bool {
 
 func NewOrder(bid bool, size float64) *Order {
 	return &Order{
+		// fixme: rand is not good enough
+		Id:        int64(rand.Intn(1000000)),
 		Size:      size,
 		Bid:       bid,
 		Limit:     &Limit{},
-		Timestamp: 0,
+		Timestamp: time.Now().UnixMilli(),
 	}
 }
 
