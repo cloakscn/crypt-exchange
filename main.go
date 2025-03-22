@@ -13,6 +13,7 @@ import (
 func main() {
 	fmt.Println("Hello Crypto Exchange!")
 	e := echo.New()
+	e.HTTPErrorHandler = httpErrorHandler
 
 	ex := NewExchange()
 	e.GET("/book/:market", ex.handleGetBook)
@@ -23,6 +24,10 @@ func main() {
 }
 
 type OrderType string
+
+func httpErrorHandler(err error, c echo.Context) {
+	fmt.Println(err)
+}
 
 const (
 	MarketOrder OrderType = "MARKET"
@@ -56,6 +61,12 @@ type PlaceOrderReq struct {
 	Market Market    `json:"market"`
 }
 
+type MatchedOrder struct {
+	Id    int64   `json:"id"`
+	Price float64 `json:"price"`
+	Size  float64 `json:"size"`
+}
+
 func (ex *Exchange) handlePlaceOrder(c echo.Context) error {
 	var placeOrderReq PlaceOrderReq
 
@@ -75,8 +86,28 @@ func (ex *Exchange) handlePlaceOrder(c echo.Context) error {
 		})
 	case MarketOrder:
 		matches := ob.PlaceMarketOrder(order)
+		matchOrders := make([]*MatchedOrder, len(matches))
+
+		isBid := false
+		if order.Bid {
+			isBid = true
+		}
+
+		for i := 0; i < len(matchOrders); i++ {
+			id := matches[i].Bid.Id
+			if isBid {
+				id = matches[i].Ask.Id
+			}
+
+			matchOrders[i] = &MatchedOrder{
+				Id:    id,
+				Price: matches[i].Price,
+				Size:  matches[i].SizeFilled,
+			}
+		}
+
 		return c.JSON(200, map[string]any{
-			"matches": len(matches),
+			"matches": matchOrders,
 		})
 	default:
 		return c.JSON(http.StatusExpectationFailed, map[string]any{
@@ -149,37 +180,16 @@ func (ex *Exchange) cancelOrder(c echo.Context) error {
 	id, _ := strconv.Atoi(idStr)
 
 	ob := ex.orderbooks[MarketETH]
-	orderCanceled := false
 
-	for _, limit := range ob.Asks() {
-		for _, order := range limit.Orders {
-			if order.Id == int64(id) {
-				ob.CancelOrder(order)
-				orderCanceled = true
-			}
-
-			if orderCanceled {
-				return c.JSON(http.StatusOK, map[string]any{
-					"msg": "order cancelled",
-				})
-			}
-		}
+	order, ok := ob.Orders[int64(id)]
+	if !ok {
+		return c.JSON(http.StatusBadRequest, map[string]any{
+			"msg": "order not found",
+		})
 	}
 
-	for _, limit := range ob.Bids() {
-		for _, order := range limit.Orders {
-			if order.Id == int64(id) {
-				ob.CancelOrder(order)
-				orderCanceled = true
-			}
-
-			if orderCanceled {
-				return c.JSON(http.StatusOK, map[string]any{
-					"msg": "order cancelled",
-				})
-			}
-		}
-	}
-
-	return nil
+	ob.CancelOrder(order)
+	return c.JSON(http.StatusOK, map[string]any{
+		"msg": "order cancelled",
+	})
 }

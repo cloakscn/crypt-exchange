@@ -1,12 +1,24 @@
+### Send Limit Order
 POST http://localhost:3000/order
 Content-Type: application/json
 # Authorization: Bearer {{git_api_key}}
+
 {
-    // "type": "MARKET",
-    "bid": false,
     "type": "LIMIT",
+    "bid": true,
     "size": 20,
     "price": 9000,
+    "market": "ETH"
+}
+### Send Market Order
+POST http://localhost:3000/order
+Content-Type: application/json
+# Authorization: Bearer {{git_api_key}}
+
+{
+    "type": "MARKET",
+    "bid": false,
+    "size": 10,
     "market": "ETH"
 }
 ###
